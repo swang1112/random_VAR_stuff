@@ -23,7 +23,6 @@ arma::mat matexp(arma::mat X, int n)
 }
 
 // IRFs
-// [[Rcpp::export]]
 List IRF_fast(arma::mat &A_hat, arma::mat &B_hat, int &horizon)
 {
   int K = A_hat.n_rows;
