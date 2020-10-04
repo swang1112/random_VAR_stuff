@@ -60,6 +60,9 @@ SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3,
   erg[["eps"]] = solve(Accept_model[[MT]][[1]]) %*% t(u)
   erg[["eps"]] = erg[["eps"]][target,]
   erg[["IRFs"]] = Accept_model[[MT]]
+
+  
+  # IRFs Plot ---------------------------------------------------------------
   if(Plot){
 
     # convert things to datafram for ggplot

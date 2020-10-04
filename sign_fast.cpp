@@ -155,7 +155,7 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
 
             while (h <= r_ahead)
             {
-                arma::mat irf_h = as<arma::mat>(IRF[h]);
+                arma::mat irf_h = as<arma::mat>(irf_temp[h]);
                 if (all(all(arma::sign(irf_h) == Signmat_r)))
                 {
                 h++;
