@@ -71,7 +71,6 @@ arma::imat choose2_fast(int &N)
 }
 
 // Givens rotation
-// [[Rcpp::export]]
 arma::mat givensQ_fast(arma::vec &thetas, int K)
 {
   arma::mat Out = arma::eye(K, K);
@@ -117,7 +116,7 @@ int sign_check(List &IRF, int &r_start,
 
 // main
 // [[Rcpp::export]]
-void SR_EH(List & Accept_model, int K, int num_slow, arma::mat & C, int target,
+void SR_EH_kernel(List & Accept_model, int K, int num_slow, arma::mat & C, int target,
            arma::mat & Signmat_0, arma::mat & Signmat_r, int & r_start,
            int & r_end, int & iter, arma::mat & A_hat, int & n_ahead)
 {

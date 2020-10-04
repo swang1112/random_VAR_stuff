@@ -185,13 +185,7 @@ irf_temp = IRF_fast(A_hat, Bmat, 5)
 
 
 
-Smat = matrix(c(-1, 1, 1, 
-                1, 1, 1, 
-                1, 1, 1), nrow = 3, ncol = 3, byrow = T)
 
-Signmat_0 = matrix(c(1, 0, 0, 
-                1, 1, -1, 
-                -1, 1, 1), nrow = 3, ncol = 3, byrow = T)
 
 sign_check(IRF = irf_temp, r_start = 1, r_end = 1, target = 2, K = K, Smat = Smat)
 
@@ -204,4 +198,17 @@ SR_EH(Accept_model, K = K, num_slow = 1, C = C, target = 3, Signmat_0 = Signmat_
                r_start = 1, r_end = 1, iter = 10, A_hat = A_hat, n_ahead = 5)
 
 
+source("SR_EH.R")
+library(svars)
+data(USA)
+USA %>% head
+var1 <- VAR(USA, p = 3, "const")
+Smat = matrix(c(-1, 1, 1, 
+                1, 1, 1, 
+                1, 1, 1), nrow = 3, ncol = 3, byrow = T)
 
+Signmat_0 = matrix(c(1, 0, 0, 
+                     1, 1, -1, 
+                     -1, 1, 1), nrow = 3, ncol = 3, byrow = T)
+result = SR_EH(Model = var1, iter = 1000, num_slow = 1, target = 3, 
+               Signmat_0 = Signmat_0, Signmat_r = Smat, r_start = 1, r_end = 1, n_ahead = 15, Ci = 0.8)
