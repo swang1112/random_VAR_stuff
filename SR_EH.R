@@ -1,6 +1,6 @@
 require(dplyr)
 require(ggplot2)
-Rcpp::sourceCpp("sign_fast.cpp")
+Rcpp::sourceCpp("sign_EH.cpp")
 
 #' Eickmeier und Hofmann (2013) 's Scheme of Cholesky and Sign Restrictions
 #'
@@ -22,25 +22,7 @@ Rcpp::sourceCpp("sign_fast.cpp")
 #' @examples NA
 SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3, 
                  Signmat_0, Signmat_r, r_start = 1, r_end = 3, n_ahead = 15, 
-                 Ci = 0.68, Epsname = NULL){
-  
-  # convert things to datafram for ggplot
-  ready2plot = function(x, value_name = "value"){
- 
-    Out           = matrix(0, nrow = n_ahead, ncol = K^2 + 1)
-    colnames(Out) = rep("h", K^2 + 1)
-    Out[,1]       = 1:n_ahead
-    c             = 1
-    temp          = array(x, dim = c(K, K, n_ahead))
-    for (i in 1:K) {
-      for (j in 1:K) {
-        c = c + 1
-        Out[,c] = temp[i,j,]
-        colnames(Out)[c] = paste("epsilon[", Epsname[j],"]", "%->%", Yname[i])
-      }
-    }
-    Out %>% as.data.frame %>% reshape2::melt(id = "h", value.name = value_name)
-  }
+                 Ci = 0.68, Epsname = NULL, Plot = TRUE){
   
   p     = Model$p 
   u     = Model %>% resid # residuals
@@ -72,32 +54,61 @@ SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3,
   Accept_model_stand = Accept_model_flat %>% apply(1, function(x){ (x - Medians)/Sd }) %>% t
   MT = which.min(Accept_model_stand[,(1:(K^2*r_end))] %>% apply(1, function(x){crossprod(x)}))
 
-  # prepare to plot
-  Response.MT = ready2plot(Accept_model_flat[MT,])
-  Response.M  = ready2plot(Medians)
-  Response.L  = ready2plot(P_quant[1,], "L")
-  Response.U  = ready2plot(P_quant[2,], "U")
-  
-  Response.Ci   = Response.L %>% left_join(Response.U, by = c("variable", "h"))
-  Response.plot = Response.M %>% left_join(Response.Ci, by = c("variable", "h")) %>% tibble::add_column(Label = "median")
-  Response.plot = rbind(Response.plot, Response.MT %>% left_join(Response.Ci, by = c("variable", "h")) %>% tibble::add_column(Label = "median target"))
-  
-  IRF_plot = Response.plot %>% ggplot(aes(x = h, y = value, group = Label)) +
-    geom_line(aes(linetype = Label, color = Label), alpha = 0.9) +
-    geom_hline(yintercept = 0, color = 'red') +
-    facet_wrap(~variable, scales = "free_y", labeller = label_parsed, ncol = K) +
-    geom_ribbon(aes(ymin = L, ymax = U), alpha = 0.2) +
-    xlab("Horizon") + ylab("Response") +
-    theme_bw() 
-  
   erg = list()
   erg[["B"]] = Accept_model[[MT]][[1]]
   erg[["A_hat"]] = A_hat
   erg[["eps"]] = solve(Accept_model[[MT]][[1]]) %*% t(u)
+  erg[["eps"]] = erg[["eps"]][target,]
   erg[["IRFs"]] = Accept_model[[MT]]
-  erg[["Response"]] = Response.plot
+  if(Plot){
 
-  plot(IRF_plot)
+    # convert things to datafram for ggplot
+    ready2plot = function(x, value_name = "value"){
+      
+      Out           = matrix(0, nrow = n_ahead, ncol = K^2 + 1)
+      colnames(Out) = rep("h", K^2 + 1)
+      Out[,1]       = 1:n_ahead
+      c             = 1
+      temp          = array(x, dim = c(K, K, n_ahead))
+      for (i in 1:K) {
+        for (j in 1:K) {
+          c = c + 1
+          Out[,c] = temp[i,j,]
+          colnames(Out)[c] = paste("epsilon[", Epsname[j],"]", "%->%", Yname[i])
+        }
+      }
+      Out %>% as.data.frame %>% reshape2::melt(id = "h", value.name = value_name)
+    }
+    
+    # prepare to plot
+    Response.MT = ready2plot(Accept_model_flat[MT,])
+    Response.M  = ready2plot(Medians)
+    Response.L  = ready2plot(P_quant[1,], "L")
+    Response.U  = ready2plot(P_quant[2,], "U")
+    
+    Response.Ci   = Response.L %>% left_join(Response.U, by = c("variable", "h"))
+    Response.plot = Response.M %>% left_join(Response.Ci, by = c("variable", "h")) %>% tibble::add_column(Label = "median")
+    Response.plot = rbind(Response.plot, Response.MT %>% left_join(Response.Ci, by = c("variable", "h")) %>% tibble::add_column(Label = "median target"))
+    
+    # Partial identification
+    Response.partial <- data.frame()
+    for (k in 1:(2*K)) {
+      Response.temp <- Response.plot[((n_ahead)*K*(k-1) + 1): ((n_ahead)*K*k),]
+      Response.partial <- bind_rows(Response.partial,Response.temp[((n_ahead)*(target-1)+1):((n_ahead)*target),])
+    }
+    
+    IRF_plot = Response.partial %>% ggplot(aes(x = h, y = value, group = Label)) +
+      geom_line(aes(linetype = Label, color = Label), alpha = 0.9) +
+      geom_hline(yintercept = 0, color = 'red') +
+      facet_wrap(~variable, scales = "free_y", labeller = label_parsed, ncol = 1) +
+      geom_ribbon(aes(ymin = L, ymax = U), alpha = 0.2) +
+      xlab("Horizon") + ylab("Response") +
+      theme_bw() 
+    
+    erg[["Response"]] = Response.plot
+    plot(IRF_plot)
+  }
+  
   return(erg)
 } 
 

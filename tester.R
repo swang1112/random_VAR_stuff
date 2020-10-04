@@ -210,5 +210,13 @@ Smat = matrix(c(-1, 1, 1,
 Signmat_0 = matrix(c(1, 0, 0, 
                      1, 1, -1, 
                      -1, 1, 1), nrow = 3, ncol = 3, byrow = T)
-result = SR_EH(Model = var1, iter = 1000, num_slow = 1, target = 3, 
-               Signmat_0 = Signmat_0, Signmat_r = Smat, r_start = 1, r_end = 1, n_ahead = 15, Ci = 0.8)
+result = SR_EH(Model = var1, 
+               iter = 1000, 
+               num_slow = 1, 
+               target = 3, 
+               Signmat_0 = Signmat_0,
+               Signmat_r = Smat, 
+               r_start = 1, 
+               r_end = 1, 
+               n_ahead = 15, 
+               Ci = 0.8, Plot = F)
