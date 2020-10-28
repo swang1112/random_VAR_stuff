@@ -2,6 +2,7 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins("cpp11")]]
+//©Shu Wang 2020
 
 using namespace Rcpp;
 

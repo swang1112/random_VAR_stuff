@@ -1,16 +1,27 @@
 Rcpp::sourceCpp("sign_fast.cpp")
+require(ggplot2)
+require(dplyr)
 
-id.sign.full = function(Model, iter = 1000, Partial = NULL, Signmat, r_ahead, n_ahead = 15, 
+#' Identification by Sign Restrictions
+#'
+#' @param Model A class of 'varest' or 'vec2var'
+#' @param iter Integer, number of successful draws
+#' @param Signmat Matrix of dimension (KxK), sign restrictions for impulse response functions:
+#'                1 for positive; -1 for negative; 0 for unrestricted
+#' @param r_ahead Integer, restricted horizons of impulse response functions: 
+#'                0 if only impact effects are subject restrictions
+#' @param n_ahead Integer, horizon of IRFs 
+#' @param Ci Double, quantiles of accepted set value between [0,1] 
+#' @param Epsname Char, shock names, by default Epsname = Yname
+#' @param Plot Logica, Plot = TRUE for visualization of impulse response functions
+#'
+#' @return List
+#' @export id.sign.full
+#' @author ©Shu Wang 2020
+#' 
+#' @examples NULL
+id.sign.full = function(Model, iter = 1000, Signmat, r_ahead, n_ahead = 15, 
                    Ci = 0.68, Epsname = NULL, Plot = TRUE){
-  
-  Model = VAR_Y
-  iter = 100
-  Signmat = matrix(c(1,1,1, -1,1,1, -1,-1,1), nrow = 3, ncol = 3)
-  r_ahead = 0
-  n_ahead = 15
-  Ci = 0.90
-  Epsname = NULL
-  Plot = TRUE
   
   p     = Model$p 
   u     = Model %>% resid # residuals
