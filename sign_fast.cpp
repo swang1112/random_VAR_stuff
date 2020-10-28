@@ -23,7 +23,6 @@ arma::mat matexp(arma::mat X, int n)
 }
 
 // IRFs
-// [[Rcpp::export]]
 List IRF_fast(arma::mat &A_hat, arma::mat &B_hat, int &horizon)
 {
   int K = A_hat.n_rows;
@@ -89,8 +88,32 @@ arma::mat givensQ_fast(arma::vec &thetas, int K)
   return Out.t();
 }
 
+// find unrestricted elements
+
+
+
+// replace unrestricted values by zero(s)
+void agnosticism(arma::mat &X, arma::vec &row, arma::vec &col)
+{
+  int agn = row.n_rows;
+  if (agn == 1)
+  {
+    int i = row[0];
+    int j = col[0];
+    X(i, j) = 0.0;
+  } else 
+  {
+    for (int ii = 0; ii < agn; ii ++)
+    {
+      int i = row[ii];
+      int j = col[ii];
+      X(i, j) = 0.0;
+    }
+  }
+}
+
 // sign check
-int sign_check(List &IRF, int &r_ahead, int &target, int &K, arma::mat &Smat)
+int sign_check(List &IRF, int &r_ahead, int &K, arma::mat &Smat)
 {
   int h = 0;
   int Out = 1;
@@ -113,10 +136,13 @@ int sign_check(List &IRF, int &r_ahead, int &target, int &K, arma::mat &Smat)
   return Out;
 }
 
+
+
+
 // main
 // [[Rcpp::export]]
 void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r, int &r_ahead,
-                int & iter, arma::mat & A_hat, int & n_ahead)
+                int & iter, arma::mat & A_hat, int & n_ahead, int &Agnostic, arma::vec &row, arma::vec &col)
 {
 
   int i = 0;
@@ -140,6 +166,11 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
     
     List irf_temp = IRF_fast(A_hat, Bmat, n_ahead);
      
+    if (Agnostic)
+    {
+      agnosticism(Bmat, row, col);
+    }
+
     if (all(all(arma::sign(Bmat) == Signmat_r)) == 0)
     {
       continue;
@@ -150,12 +181,18 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
             Accept_model[i] = irf_temp;
             i++;
         } else {
-            int h = 0;
+            int h = 1;
             int check = 1;
 
             while (h <= r_ahead)
             {
                 arma::mat irf_h = as<arma::mat>(irf_temp[h]);
+
+                if (Agnostic)
+                {
+                  agnosticism(irf_h, row, col);
+                }
+
                 if (all(all(arma::sign(irf_h) == Signmat_r)))
                 {
                 h++;
@@ -181,4 +218,3 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
     }
   }
 }
-
