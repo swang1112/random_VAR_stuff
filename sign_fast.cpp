@@ -1,4 +1,5 @@
 #include <RcppArmadillo.h>
+#include <omp.h>
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins("cpp11")]]
@@ -99,18 +100,15 @@ int agno_sign_check(arma::mat &X, arma::mat &Smat)
   return all(Sign_x.elem(arma::find_finite(Smat)) == Smat.elem(arma::find_finite(Smat)));
 }
 
-
-
-
 // main
 // [[Rcpp::export]]
 void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r, int &r_ahead,
-                int & iter, arma::mat & A_hat, int & n_ahead)
+                int & iter, arma::mat & A_hat, int & n_ahead, int Core)
 {
-
-  int i = 0;
   //List Accept_model(iter);
-  while (i < iter)
+  omp_set_num_threads(Core);
+  #pragma omp parallel for
+  for (int i = 0; i < iter; i++)
   {
     // while loop
     arma::vec thetas = arma::randu<arma::vec>(K  * (K - 1) / 2);
@@ -131,13 +129,13 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
      
     if (agno_sign_check(Bmat, Signmat_r) == 0)
     {
+      i--;
       continue;
     }
     else
     {
         if (r_ahead == 0){
             Accept_model[i] = irf_temp;
-            i++;
         } else {
             int h = 1;
             int check = 1;
@@ -161,10 +159,10 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
             if (check)
             {
                 Accept_model[i] = irf_temp;
-                i++;
             }
             else
             {
+                i--;
                 continue;
             }
         }

@@ -14,6 +14,7 @@ require(dplyr)
 #' @param Ci Double, quantiles of accepted set value between [0,1] 
 #' @param Epsname Char, shock names, by default Epsname = Yname
 #' @param Plot Logica, Plot = TRUE for visualization of impulse response functions
+#' @param Core Integer, number of cores available for parallel computing
 #'
 #' @return List
 #' @export id.sign.full
@@ -21,7 +22,7 @@ require(dplyr)
 #' 
 #' @examples NULL
 id.sign.full = function(Model, iter = 1000, Signmat, r_ahead, n_ahead = 15, 
-                   Ci = 0.68, Epsname = NULL, Plot = TRUE){
+                   Ci = 0.68, Epsname = NULL, Plot = TRUE, Core){
   
   p     = Model$p 
   u     = Model %>% resid # residuals
@@ -35,7 +36,7 @@ id.sign.full = function(Model, iter = 1000, Signmat, r_ahead, n_ahead = 15,
 
   Accept_model = vector("list", length = iter)
   SR_kernel(Accept_model, K = K, C = C, Signmat_r = Signmat, r_ahead = r_ahead, 
-            A_hat = A_hat, iter = iter, n_ahead = n_ahead+1 )
+            A_hat = A_hat, iter = iter, n_ahead = n_ahead+1, core = Core)
   
   Accept_model_flat = matrix(0, nrow = iter, ncol = K^2*(n_ahead+1)) 
   for (h in 1:(n_ahead+1)) {

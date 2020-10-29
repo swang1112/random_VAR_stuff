@@ -1,4 +1,5 @@
 #include <RcppArmadillo.h>
+#include <omp.h>
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins("cpp11")]]
@@ -126,12 +127,12 @@ int agno_sign_check(arma::mat &X, arma::mat &Smat)
 // [[Rcpp::export]]
 void SR_EH_kernel(List & Accept_model, int K, int num_slow, arma::mat & C, int target,
            arma::mat & Signmat_0, arma::mat & Signmat_r, int & r_start,
-           int & r_end, int & iter, arma::mat & A_hat, int & n_ahead)
+           int & r_end, int & iter, arma::mat & A_hat, int & n_ahead, int core)
 {
-
-  int i = 0;
   //List Accept_model(iter);
-  while (i < iter)
+  omp_set_num_threads(core);
+  #pragma omp parallel for
+  for (int i = 0; i < iter; i++)
   {
     // while loop
     arma::vec thetas = arma::randu<arma::vec>((K - num_slow) * (K - num_slow - 1) / 2);
@@ -154,6 +155,7 @@ void SR_EH_kernel(List & Accept_model, int K, int num_slow, arma::mat & C, int t
      
     if ( agno_sign_check(Bmat, Signmat_0) == 0)
     {
+      i--;
       continue;
     }
     else
@@ -191,6 +193,7 @@ void SR_EH_kernel(List & Accept_model, int K, int num_slow, arma::mat & C, int t
       }
       else
       {
+        i--;
         continue;
       }
     }

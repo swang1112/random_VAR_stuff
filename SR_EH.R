@@ -15,6 +15,8 @@ Rcpp::sourceCpp("sign_EH.cpp")
 #' @param n_ahead Integer, horizon of IRFs 
 #' @param Ci Double, confidence interval value between [0,1] (bootstrap under development)
 #' @param Epsname Char, shock names, by default Epsname = Yname
+#' @param Plot 
+#' @param Core Integer, Number of cores available for parallel computing
 #'
 #' @return List
 #' @export SR_EH
@@ -22,7 +24,7 @@ Rcpp::sourceCpp("sign_EH.cpp")
 #' @examples NA
 SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3, 
                  Signmat_0, Signmat_r, r_start = 1, r_end = 3, n_ahead = 15, 
-                 Ci = 0.68, Epsname = NULL, Plot = TRUE){
+                 Ci = 0.68, Epsname = NULL, Plot = TRUE, Core = 8){
   
   p     = Model$p 
   u     = Model %>% resid # residuals
@@ -37,7 +39,7 @@ SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3,
   Accept_model = vector("list", length = iter)
   SR_EH_kernel(Accept_model, K = K, num_slow = num_slow, C = C, target = target, 
         Signmat_0 = Signmat_0, Signmat_r = Smat, r_start = r_start, r_end = r_end, 
-        iter = iter, A_hat = A_hat, n_ahead = n_ahead)
+        iter = iter, A_hat = A_hat, n_ahead = n_ahead, core = Core)
   
   Accept_model_flat = matrix(0, nrow = iter, ncol = K^2*n_ahead) 
   for (h in 1:n_ahead) {
