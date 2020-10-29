@@ -32,15 +32,10 @@ id.sign.full = function(Model, iter = 1000, Signmat, r_ahead, n_ahead = 15,
   A_hat = vars::Bcoef(Model)[,1:(K*p)] # AR coeff
   Yname = names(Model$varresult) # Variable names
   if(is.null(Epsname)){Epsname = Yname}
-  
-  Agnostic = any(abs(Signmat) == 0) %>% as.numeric()
-  ag_row = which(abs(Signmat) == 0, arr.ind = TRUE)[,1] - 1
-  ag_col = which(abs(Signmat) == 0, arr.ind = TRUE)[,2] - 1
-  
+
   Accept_model = vector("list", length = iter)
   SR_kernel(Accept_model, K = K, C = C, Signmat_r = Signmat, r_ahead = r_ahead, 
-            A_hat = A_hat, iter = iter, n_ahead = n_ahead+1, Agnostic = Agnostic, 
-            row = ag_row, col = ag_col )
+            A_hat = A_hat, iter = iter, n_ahead = n_ahead+1 )
   
   Accept_model_flat = matrix(0, nrow = iter, ncol = K^2*n_ahead) 
   for (h in 1:n_ahead) {
