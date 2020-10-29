@@ -37,8 +37,8 @@ id.sign.full = function(Model, iter = 1000, Signmat, r_ahead, n_ahead = 15,
   SR_kernel(Accept_model, K = K, C = C, Signmat_r = Signmat, r_ahead = r_ahead, 
             A_hat = A_hat, iter = iter, n_ahead = n_ahead+1 )
   
-  Accept_model_flat = matrix(0, nrow = iter, ncol = K^2*n_ahead) 
-  for (h in 1:n_ahead) {
+  Accept_model_flat = matrix(0, nrow = iter, ncol = K^2*(n_ahead+1)) 
+  for (h in 1:(n_ahead+1)) {
     Accept_model_flat[,((K^2*(h-1)+1):(K^2*h))] = Accept_model %>% lapply("[[", h) %>% unlist %>% matrix(nrow = iter, ncol = K^2, byrow = T)
   }
   
@@ -95,7 +95,7 @@ id.sign.full = function(Model, iter = 1000, Signmat, r_ahead, n_ahead = 15,
       facet_wrap(~variable, scales = "free_y", labeller = label_parsed, ncol = K) +
       geom_ribbon(aes(ymin = L, ymax = U), alpha = 0.26) +
       xlab(" ") + ylab(" ") +
-      theme_bw() + theme(legend.title = element_blank())
+      theme_bw() + theme(legend.position = "none")
     
     erg[["Response"]] = Response.plot
     plot(IRF_plot)
