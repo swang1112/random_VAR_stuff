@@ -2,7 +2,6 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins("cpp11")]]
-//©Shu Wang 2020
 
 using namespace Rcpp;
 
@@ -90,6 +89,7 @@ arma::mat givensQ_fast(arma::vec &thetas, int K)
 }
 
 // sign check
+/*
 int sign_check(List &IRF, int &r_start,
                int &r_end, int &target, int &K, arma::mat &Smat)
 {
@@ -112,6 +112,14 @@ int sign_check(List &IRF, int &r_start,
   }
 
   return Out;
+}
+*/
+
+// agnostic sign check 
+int agno_sign_check(arma::mat &X, arma::mat &Smat)
+{
+  arma::mat Sign_x = sign(X);
+  return all(Sign_x.elem(arma::find_finite(Smat)) == Smat.elem(arma::find_finite(Smat)));
 }
 
 // main
@@ -144,14 +152,14 @@ void SR_EH_kernel(List & Accept_model, int K, int num_slow, arma::mat & C, int t
     
     List irf_temp = IRF_fast(A_hat, Bmat, n_ahead);
      
-    if (all(all(arma::sign(Bmat) == Signmat_0)) == 0)
+    if ( agno_sign_check(Bmat, Signmat_0) == 0)
     {
       continue;
     }
     else
     {
      
-      Rcout << " i = " << i << std::endl;
+      Rcout << " i = " << i << "\r";
       
       int h = r_start;
       int check = 1;
@@ -159,8 +167,10 @@ void SR_EH_kernel(List & Accept_model, int K, int num_slow, arma::mat & C, int t
       while (h <= r_end)
       {
         arma::mat irf_h = as<arma::mat>(irf_temp[h]);
+        arma::mat irf_h_target = irf_h.submat(0, (target-1), (K - 1), (target-1));
+        arma::mat Signmat_target = Signmat_r.submat(0, (target-1), (K - 1), (target-1));
        
-        if (all(all(arma::sign(irf_h.submat(0, (target-1), (K - 1), (target-1))) == Signmat_r.submat(0, (target-1), (K - 1), (target-1)))))
+        if (agno_sign_check(irf_h_target,Signmat_target))
         {
           h++;
           check = 1;

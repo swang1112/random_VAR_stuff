@@ -92,48 +92,11 @@ arma::mat givensQ_fast(arma::vec &thetas, int K)
 
 
 
-// replace unrestricted values by zero(s)
-void agnosticism(arma::mat &X, arma::vec &row, arma::vec &col)
+// agnostic sign check 
+int agno_sign_check(arma::mat &X, arma::mat &Smat)
 {
-  int agn = row.n_rows;
-  if (agn == 1)
-  {
-    int i = row[0];
-    int j = col[0];
-    X(i, j) = 0.0;
-  } else 
-  {
-    for (int ii = 0; ii < agn; ii ++)
-    {
-      int i = row[ii];
-      int j = col[ii];
-      X(i, j) = 0.0;
-    }
-  }
-}
-
-// sign check
-int sign_check(List &IRF, int &r_ahead, int &K, arma::mat &Smat)
-{
-  int h = 0;
-  int Out = 1;
-
-  while (h <= r_ahead)
-  {
-    arma::mat irf_h = as<arma::mat>(IRF[h]);
-    if (all(all(arma::sign(irf_h) == Smat)))
-    {
-      h++;
-      Out = 1;
-    }
-    else
-    {
-      Out = 0;
-      break;
-    }
-  }
-
-  return Out;
+  arma::mat Sign_x = sign(X);
+  return all(Sign_x.elem(arma::find_finite(Smat)) == Smat.elem(arma::find_finite(Smat)));
 }
 
 
@@ -142,7 +105,7 @@ int sign_check(List &IRF, int &r_ahead, int &K, arma::mat &Smat)
 // main
 // [[Rcpp::export]]
 void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r, int &r_ahead,
-                int & iter, arma::mat & A_hat, int & n_ahead, int &Agnostic, arma::vec &row, arma::vec &col)
+                int & iter, arma::mat & A_hat, int & n_ahead)
 {
 
   int i = 0;
@@ -166,12 +129,7 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
     
     List irf_temp = IRF_fast(A_hat, Bmat, n_ahead);
      
-    if (Agnostic)
-    {
-      agnosticism(Bmat, row, col);
-    }
-
-    if (all(all(arma::sign(Bmat) == Signmat_r)) == 0)
+    if (agno_sign_check(Bmat, Signmat_r) == 0)
     {
       continue;
     }
@@ -187,13 +145,8 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
             while (h <= r_ahead)
             {
                 arma::mat irf_h = as<arma::mat>(irf_temp[h]);
-
-                if (Agnostic)
-                {
-                  agnosticism(irf_h, row, col);
-                }
-
-                if (all(all(arma::sign(irf_h) == Signmat_r)))
+                
+                if (agno_sign_check(irf_h, Signmat_r))
                 {
                 h++;
                 check = 1;
