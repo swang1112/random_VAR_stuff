@@ -189,7 +189,6 @@ void SR_EH_kernel(List & Accept_model, int K, int num_slow, arma::mat & C, int t
       if (check)
       {
         Accept_model[i] = irf_temp;
-        i++;
       }
       else
       {
