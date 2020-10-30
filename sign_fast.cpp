@@ -137,6 +137,8 @@ void SR_kernel(List & Accept_model, int K, arma::mat & C, arma::mat & Signmat_r,
         if (r_ahead == 0){
             Accept_model[i] = irf_temp;
         } else {
+
+            Rcout << "Accepted Model: " << i << "\r";
             int h = 1;
             int check = 1;
 
