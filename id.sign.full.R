@@ -36,7 +36,7 @@ id.sign.full = function(Model, iter = 1000, Signmat, r_ahead, n_ahead = 15,
 
   Accept_model = vector("list", length = iter)
   SR_kernel(Accept_model, K = K, C = C, Signmat_r = Signmat, r_ahead = r_ahead, 
-            A_hat = A_hat, iter = iter, n_ahead = n_ahead+1, core = Core)
+            A_hat = A_hat, iter = iter, n_ahead = n_ahead+1, Core = Core)
   
   Accept_model_flat = matrix(0, nrow = iter, ncol = K^2*(n_ahead+1)) 
   for (h in 1:(n_ahead+1)) {
