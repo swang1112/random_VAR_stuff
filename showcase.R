@@ -25,7 +25,7 @@ result = SR_EH(Model = var1,
                r_start = 1, 
                r_end = 1, 
                n_ahead = 15, 
-               Ci = 0.8, Plot = FALSE)
+               Ci = 0.8, Plot = F)
 
 # (Median Target) MT impact multiplier
 result$B
