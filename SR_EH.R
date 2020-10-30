@@ -38,11 +38,11 @@ SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3,
   
   Accept_model = vector("list", length = iter)
   SR_EH_kernel(Accept_model, K = K, num_slow = num_slow, C = C, target = target, 
-        Signmat_0 = Signmat_0, Signmat_r = Smat, r_start = r_start, r_end = r_end, 
-        iter = iter, A_hat = A_hat, n_ahead = n_ahead, core = Core)
+        Signmat_0 = Signmat_0, Signmat_r = Signmat_r, r_start = r_start, r_end = r_end, 
+        iter = iter, A_hat = A_hat, n_ahead = n_ahead+1, core = Core)
   
-  Accept_model_flat = matrix(0, nrow = iter, ncol = K^2*n_ahead) 
-  for (h in 1:n_ahead) {
+  Accept_model_flat = matrix(0, nrow = iter, ncol = K^2*(n_ahead+1)) 
+  for (h in 1:(n_ahead+1)) {
     Accept_model_flat[,((K^2*(h-1)+1):(K^2*h))] = Accept_model %>% lapply("[[", h) %>% unlist %>% matrix(nrow = iter, ncol = K^2, byrow = T)
   }
   
@@ -54,7 +54,7 @@ SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3,
   ## avoid dividing zero
   Sd[which( Sd < 1e-8 )] = 1
   Accept_model_stand = Accept_model_flat %>% apply(1, function(x){ (x - Medians)/Sd }) %>% t
-  MT = which.min(Accept_model_stand[,(1:(K^2*r_end))] %>% apply(1, function(x){crossprod(x)}))
+  MT = which.min(Accept_model_stand[,(1:(K^2*(r_end+1)))] %>% apply(1, function(x){crossprod(x)}))
 
   erg = list()
   erg[["B"]] = Accept_model[[MT]][[1]]
@@ -70,11 +70,11 @@ SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3,
     # convert things to datafram for ggplot
     ready2plot = function(x, value_name = "value"){
       
-      Out           = matrix(0, nrow = n_ahead, ncol = K^2 + 1)
+      Out           = matrix(0, nrow = n_ahead+1, ncol = K^2 + 1)
       colnames(Out) = rep("h", K^2 + 1)
-      Out[,1]       = 1:n_ahead
+      Out[,1]       = 0:n_ahead
       c             = 1
-      temp          = array(x, dim = c(K, K, n_ahead))
+      temp          = array(x, dim = c(K, K, n_ahead+1))
       for (i in 1:K) {
         for (j in 1:K) {
           c = c + 1
@@ -98,17 +98,18 @@ SR_EH = function(Model, iter = 1000, num_slow = 2, target = 3,
     # Partial identification
     Response.partial <- data.frame()
     for (k in 1:(2*K)) {
-      Response.temp <- Response.plot[((n_ahead)*K*(k-1) + 1): ((n_ahead)*K*k),]
-      Response.partial <- bind_rows(Response.partial,Response.temp[((n_ahead)*(target-1)+1):((n_ahead)*target),])
+      Response.temp <- Response.plot[((n_ahead+1)*K*(k-1) + 1): ((n_ahead+1)*K*k),]
+      Response.partial <- bind_rows(Response.partial,Response.temp[((n_ahead+1)*(target-1)+1):((n_ahead+1)*target),])
     }
     
     IRF_plot = Response.partial %>% ggplot(aes(x = h, y = value, group = Label)) +
-      geom_line(aes(linetype = Label, color = Label), alpha = 0.9) +
+      geom_line(aes(linetype = Label), alpha = 1, size = 0.6) +
       geom_hline(yintercept = 0, color = 'red') +
       facet_wrap(~variable, scales = "free_y", labeller = label_parsed, ncol = 1) +
-      geom_ribbon(aes(ymin = L, ymax = U), alpha = 0.2) +
-      xlab("Horizon") + ylab("Response") +
-      theme_bw() 
+      geom_ribbon(aes(ymin = L, ymax = U), alpha = 0.26) +
+      xlab(" ") + ylab(" ") +
+      theme_bw() + theme(legend.position = "none")
+    
     
     erg[["Response"]] = Response.plot
     plot(IRF_plot)

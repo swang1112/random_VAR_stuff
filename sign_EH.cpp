@@ -89,33 +89,6 @@ arma::mat givensQ_fast(arma::vec &thetas, int K)
   return Out.t();
 }
 
-// sign check
-/*
-int sign_check(List &IRF, int &r_start,
-               int &r_end, int &target, int &K, arma::mat &Smat)
-{
-  int h = r_start;
-  int Out = 1;
-
-  while (h <= r_end)
-  {
-    arma::mat irf_h = as<arma::mat>(IRF[h]);
-    if (all(all(arma::sign(irf_h.submat(0, target, (K - 1), target)) == Smat.submat(0, target, (K - 1), target))))
-    {
-      h++;
-      Out = 1;
-    }
-    else
-    {
-      Out = 0;
-      break;
-    }
-  }
-
-  return Out;
-}
-*/
-
 // agnostic sign check 
 int agno_sign_check(arma::mat &X, arma::mat &Smat)
 {
@@ -161,7 +134,7 @@ void SR_EH_kernel(List & Accept_model, int K, int num_slow, arma::mat & C, int t
     else
     {
      
-      Rcout << " i = " << i << "\r";
+      Rcout << " Accepted model: " << i+1 << "\r";
       
       int h = r_start;
       int check = 1;
